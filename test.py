@@ -215,46 +215,47 @@ def test_refinements():
     tree.print_layers()
 
 
-def test_hicuts():
+def test_hicuts(rules):
     print("========== hicuts ==========")
-    rules = []
-    rules.append(Rule([0, 10, 0, 10, 0, 1, 0, 1, 0, 1]))
-    rules.append(Rule([0, 10, 10, 20, 0, 1, 0, 1, 0, 1]))
-    rules.append(Rule([10, 20, 0, 10, 0, 1, 0, 1, 0, 1]))
-    rules.append(Rule([10, 20, 10, 20, 0, 1, 0, 1, 0, 1]))
+    # rules = []
+    # rules.append(Rule(1,[0, 10, 0, 10, 0, 1, 0, 1, 0, 1]))
+    # rules.append(Rule(1,[0, 10, 10, 20, 0, 1, 0, 1, 0, 1]))
+    # rules.append(Rule(1,[10, 20, 0, 10, 0, 1, 0, 1, 0, 1]))
+    # rules.append(Rule(1,[10, 20, 10, 20, 0, 1, 0, 1, 0, 1]))
     cuts = HiCuts(rules)
     cuts.train()
+    # print(cuts.get_depth())
 
 
-def test_hypercuts():
+def test_hypercuts(rules):
     print("========== hypercuts ==========")
-    rules = []
-    rules.append(Rule([0, 10, 0, 10, 0, 1, 0, 1, 0, 1]))
-    rules.append(Rule([0, 10, 10, 20, 0, 1, 0, 1, 0, 1]))
-    rules.append(Rule([10, 20, 0, 10, 0, 1, 0, 1, 0, 1]))
-    rules.append(Rule([10, 20, 10, 20, 0, 1, 0, 1, 0, 1]))
+    # rules = []
+    # rules.append(Rule([0, 10, 0, 10, 0, 1, 0, 1, 0, 1]))
+    # rules.append(Rule([0, 10, 10, 20, 0, 1, 0, 1, 0, 1]))
+    # rules.append(Rule([10, 20, 0, 10, 0, 1, 0, 1, 0, 1]))
+    # rules.append(Rule([10, 20, 10, 20, 0, 1, 0, 1, 0, 1]))
     cuts = HyperCuts(rules)
     cuts.leaf_threshold = 1
     cuts.train()
 
 
-def test_efficuts():
+def test_efficuts(rules):
     print("========== efficuts ==========")
 
     # test separate rules
-    rule0 = Rule([
-        0, 2**32 * 0.05, 0, 2**32 * 0.05 - 1, 0, 2**16 * 0.5 - 1, 0,
-        2**16 * 0.5, 0, 2**8 * 0.5 - 1
-    ])
-    rule1 = Rule([
-        0, 2**32 * 0.05, 0, 2**32 * 0.05 - 1, 0, 2**16 * 0.5 - 1, 0,
-        2**16 * 0.5, 0, 2**8 * 0.5
-    ])
-    rules = [rule0, rule1]
+    # rule0 = Rule([
+    #     0, 2**32 * 0.05, 0, 2**32 * 0.05 - 1, 0, 2**16 * 0.5 - 1, 0,
+    #     2**16 * 0.5, 0, 2**8 * 0.5 - 1
+    # ])
+    # rule1 = Rule([
+    #     0, 2**32 * 0.05, 0, 2**32 * 0.05 - 1, 0, 2**16 * 0.5 - 1, 0,
+    #     2**16 * 0.5, 0, 2**8 * 0.5
+    # ])
+    # rules = [rule0, rule1]
     cuts = EffiCuts(rules)
     rule_subsets = cuts.separate_rules(rules)
-    assert rule_subsets[18] == [rule0]
-    assert rule_subsets[19] == [rule1]
+    # assert rule_subsets[18] == [rule0]
+    # assert rule_subsets[19] == [rule1]
 
     # test merge rule subsets
     rule_subsets = [[] for i in range(32)]
@@ -316,9 +317,11 @@ def test_cutsplit():
 
 
 if __name__ == "__main__":
+    rules = load_rules_from_file("./classbench/fw1_1k")
+    # print(rules)
     #test_tree()
     #test_refinements()
-    #test_hicuts()
-    #test_hypercuts()
-    #test_efficuts()
-    test_cutsplit()
+    test_hicuts(rules)
+    test_hypercuts(rules)
+    # test_efficuts(rules)
+    # test_cutsplit()

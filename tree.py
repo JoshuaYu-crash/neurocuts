@@ -11,18 +11,18 @@ SPLIT_CACHE = {}
 class Rule:
     def __init__(self, priority, ranges):
         # each range is left inclusive and right exclusive, i.e., [left, right)
-        self.priority = priority
-        self.ranges = ranges
+        self.priority = priority  # 优先级
+        self.ranges = ranges      #
         self.names = ["src_ip", "dst_ip", "src_port", "dst_port", "proto"]
 
     def is_intersect(self, dimension, left, right):
-        return not (left >= self.ranges[dimension*2+1] or \
+        return not (left >= self.ranges[dimension*2+1] or
             right <= self.ranges[dimension*2])
 
     def is_intersect_multi_dimension(self, ranges):
         for i in range(5):
-            if ranges[i*2] >= self.ranges[i*2+1] or \
-                    ranges[i*2+1] <= self.ranges[i*2]:
+            if ranges[i*2] >= self.ranges[i*2+1] \
+                    or ranges[i*2+1] <= self.ranges[i*2]:
                 return False
         return True
 
@@ -53,9 +53,9 @@ class Rule:
 
     def is_covered_by(self, other, ranges):
         for i in range(5):
-            if (max(self.ranges[i*2], ranges[i*2]) < \
+            if (max(self.ranges[i*2], ranges[i*2]) <
                     max(other.ranges[i*2], ranges[i*2]))or \
-                    (min(self.ranges[i*2+1], ranges[i*2+1]) > \
+                    (min(self.ranges[i*2+1], ranges[i*2+1]) >
                     min(other.ranges[i*2+1], ranges[i*2+1])):
                 return False
         return True
@@ -380,7 +380,7 @@ class Tree:
         node.action = ("partition", 0, 0)
         self.update_tree(node, children)
 
-    def partition_current_node(self, part_dim, part_size):
+    def partition_current_node(self, part_dimension, part_size):
         return self.partition_node(self.current_node, part_dimension,
                                    part_size)
 
@@ -687,8 +687,13 @@ class Tree:
         #     region boundary for non-leaf: 16 bytes
         #     each child pointer: 4 bytes
         #     each rule: 16 bytes
-        result = {"bytes_per_rule": 0, "memory_access": 0, \
-            "num_leaf_node": 0, "num_nonleaf_node": 0, "num_node": 0}
+        result = {
+            "bytes_per_rule": 0,
+            "memory_access": 0,
+            "num_leaf_node": 0,
+            "num_nonleaf_node": 0,
+            "num_node": 0
+        }
         nodes = [self.root]
         while len(nodes) != 0:
             next_layer_nodes = []

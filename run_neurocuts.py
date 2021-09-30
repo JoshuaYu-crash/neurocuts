@@ -8,7 +8,7 @@ import os
 import glob
 import json
 
-from gym.spaces import Tuple, Box, Discrete, Dict
+# from gym.spaces import Tuple, Box, Discrete, Dict
 import numpy as np
 
 from ray.rllib.models import ModelCatalog

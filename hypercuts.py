@@ -54,6 +54,7 @@ class HyperCuts(object):
 
     # HyperCuts heuristic to cut a node
     def select_action(self, tree, node):
+        # 计算重叠规则大于平均值的维度
         # select dimensions
         distinct_components_count = []
         distinct_components_ratio = []
@@ -68,11 +69,15 @@ class HyperCuts(object):
                 len(distinct_components) /
                 (node.ranges[i * 2 + 1] - node.ranges[i * 2]))
         mean_count = sum(distinct_components_count) / 5.0
+        # 挑选大于平均值的维度
         cut_dimensions = [i for i in range(5) \
             if distinct_components_count[i] > mean_count]
+
         cut_dimensions.sort(key=lambda i: \
             (-distinct_components_count[i], -distinct_components_ratio[i]))
 
+
+        # 对于挑选的维度计算切割方式
         # compute cuts for the dimensions
         cut_nums = []
         total_cuts = 1
@@ -85,10 +90,11 @@ class HyperCuts(object):
             last_empty = 0
             while True:
                 cut_num *= 2
-
+                # 二分切割
                 # compute rule count in each child
                 range_per_cut = math.ceil((range_right - range_left) / cut_num)
                 child_rules_count = [0 for i in range(cut_num)]
+
                 for rule in node.rules:
                     rule_range_left = max(rule.ranges[i * 2], range_left)
                     rule_range_right = min(rule.ranges[i * 2 + 1], range_right)
@@ -106,6 +112,7 @@ class HyperCuts(object):
                     if count == 0])
 
                 # check condition
+                # 这边和Hicuts不同的是spmf = spfac*根号N
                 if cut_num > range_right - range_left or \
                     total_cuts * cut_num > self.spfac * math.sqrt(len(node.rules)) or \
                     abs(last_mean - current_mean) < 0.1 * last_mean or \
@@ -125,7 +132,7 @@ class HyperCuts(object):
         return (cut_dimensions, cut_nums)
 
     def build_tree(self, rules):
-
+        averdep = 0
         tree = Tree(
             rules,
             self.leaf_threshold,
@@ -142,6 +149,7 @@ class HyperCuts(object):
         print_count = 0
         while not tree.is_finish():
             if tree.is_leaf(node):
+                averdep += node.depth
                 node = tree.get_next_node()
                 continue
 
@@ -162,10 +170,10 @@ class HyperCuts(object):
             if count % 10000 == 0:
                 print(datetime.datetime.now(), "Depth:", tree.get_depth(),
                       "Remaining nodes:", len(tree.nodes_to_cut))
-        # return tree.compute_result()
-        tree.result["bytes_per_rule"] = tree.result["bytes_per_rule"] / len(
-            tree.rules)
-        return tree.result
+        return tree.compute_result(), averdep
+        # tree.result["bytes_per_rule"] = tree.result["bytes_per_rule"] / len(
+        #     tree.rules)
+        # return tree.result
 
     def train(self):
 
@@ -182,17 +190,17 @@ class HyperCuts(object):
                 rules_rset.append(rule)
 
         # build a tree for each set
-        result_wset = self.build_tree(rules_wset)
-        result_rset = self.build_tree(rules_rset)
+        result_wset, averdepw = self.build_tree(rules_wset)
+        result_rset, averdepr = self.build_tree(rules_rset)
         result = {}
-        result[
-            "memory_access"] = result_wset["memory_access"] + result_rset["memory_access"]
+        result["memory_access"] = result_wset["memory_access"] + result_rset["memory_access"]
         result["num_node"] = result_wset["num_node"] + result_rset["num_node"]
         result["bytes_per_rule"] = \
-            (result_wset["bytes_per_rule"] * len(rules_wset) + \
+            (result_wset["bytes_per_rule"] * len(rules_wset) +
             result_rset["bytes_per_rule"] * len(rules_rset)) / \
             len(self.rules)
 
         print("%s Result %d %d %d" %
               (datetime.datetime.now(), result["memory_access"],
-               round(result["bytes_per_rule"]), result["num_node"]))
+               round(result["bytes_per_rule"]), result["num_node"]),
+              (averdepr+averdepw)/(result_wset["num_leaf_node"]+result_rset["num_leaf_node"]))
